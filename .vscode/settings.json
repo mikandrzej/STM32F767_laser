@@ -5,6 +5,8 @@
     "files.associations": {
         "stm32f7xx_hal_def.h": "c",
         "stm32f7xx.h": "c",
-        "stm32f767xx.h": "c"
+        "stm32f767xx.h": "c",
+        "laser_frame_queue.h": "c",
+        "laser_config.h": "c"
     }
 }

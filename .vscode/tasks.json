@@ -4,7 +4,7 @@
 		{
 			"label": "Build STM",
 			"type": "process",
-			"command": "${command:stm32-for-vscode.build}",
+			"command": "make",
 			"options": {
 				"cwd": "${workspaceRoot}"
 			},

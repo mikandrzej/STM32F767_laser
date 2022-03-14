@@ -39,7 +39,13 @@ C_SOURCES =  \
 Core/Src/dac.c \
 Core/Src/dma.c \
 Core/Src/gpio.c \
+Core/Src/laser/laser_font.c \
+Core/Src/laser/laser_font_arial.c \
+Core/Src/laser/laser_frame_processor.c \
+Core/Src/laser/laser_frame_queue.c \
+Core/Src/laser/laser_irq.c \
 Core/Src/main.c \
+Core/Src/spi.c \
 Core/Src/stm32f7xx_hal_msp.c \
 Core/Src/stm32f7xx_it.c \
 Core/Src/system_stm32f7xx.c \
@@ -60,6 +66,8 @@ Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_pwr.c \
 Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_pwr_ex.c \
 Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_rcc.c \
 Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_rcc_ex.c \
+Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_spi.c \
+Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_spi_ex.c \
 Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_tim.c \
 Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_tim_ex.c
 
@@ -134,6 +142,8 @@ AS_INCLUDES = \
 # C includes
 C_INCLUDES =  \
 -ICore/Inc \
+-ICore/Src \
+-ICore/Src/laser \
 -IDrivers/CMSIS/Device/ST/STM32F7xx/Include \
 -IDrivers/CMSIS/Include \
 -IDrivers/STM32F7xx_HAL_Driver/Inc \

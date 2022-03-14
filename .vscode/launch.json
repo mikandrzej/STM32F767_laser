@@ -12,7 +12,8 @@
             "device": "stm32f767",
             "configFiles": [
                 "openocd.cfg"
-            ]
+            ],
+            "svdFile": "${workspaceRoot}/stm32f7x7.svd"
         }
     ]
 }

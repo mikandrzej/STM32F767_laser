@@ -21,12 +21,16 @@
 #include "main.h"
 #include "dac.h"
 #include "dma.h"
+#include "spi.h"
 #include "tim.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "global_defines.h"
+#include "laser/laser_irq.h"
+#include "laser/laser_frame_processor.h"
+#include "laser/laser_font.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,21 +57,12 @@
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
-uint16_t Wave_LUT[100u] = {
-  0x8000,0x8809,0x900a,0x97fc,0x9fd4,0xa78d,0xaf1e,0xb67f,
-  0xbda9,0xc495,0xcb3c,0xd196,0xd79e,0xdd4e,0xe29f,0xe78d,
-  0xec12,0xf02a,0xf3d0,0xf702,0xf9bb,0xfbfa,0xfdbb,0xfefd,
-  0xffbe,0xffff,0xffbe,0xfefd,0xfdbb,0xfbfa,0xf9bb,0xf702,
-  0xf3d0,0xf02a,0xec12,0xe78d,0xe29f,0xdd4e,0xd79e,0xd196,
-  0xcb3c,0xc495,0xbda9,0xb67f,0xaf1e,0xa78d,0x9fd4,0x97fc,
-  0x900a,0x8809,0x8000,0x77f6,0x6ff5,0x6803,0x602b,0x5872,
-  0x50e1,0x4980,0x4256,0x3b6a,0x34c3,0x2e69,0x2861,0x22b1,
-  0x1d60,0x1872,0x13ed,0xfd5,0xc2f,0x8fd,0x644,0x405,
-  0x244,0x102,0x41,0x0,0x41,0x102,0x244,0x405,
-  0x644,0x8fd,0xc2f,0xfd5,0x13ed,0x1872,0x1d60,0x22b1,
-  0x2861,0x2e69,0x34c3,0x3b6a,0x4256,0x4980,0x50e1,0x5872,
-  0x602b,0x6803,0x6ff5,0x77f6
-};
+static uint16_t spi_data = 0xFF02u;
+static uint16_t DAC1_data = 0;
+static uint16_t DAC2_data = 0;
+static uint16_t laser_r_data = 0;
+static uint16_t laser_g_data = 0;
+static uint16_t laser_b_data = 0;
 
 /* USER CODE END PFP */
 
@@ -82,12 +77,31 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_DAC_Init();
-  MX_TIM7_Init();
+  MX_TIM8_Init();
+  MX_SPI1_Init();
+  __HAL_SPI_ENABLE(&hspi1);
 
-  HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Wave_LUT, 100u, DAC_ALIGN_12B_L);
-  HAL_TIM_Base_Start(&htim7);
-  while(1)
+  err_t status;
+  
+  status = laser_font_print_text("DUPA", -20000, -20000, 2, 255,255,255);
+  if(ERR_OK == status)
   {
+    (void)laser_frame_processor_enqueue();
+  }
+
+  HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_2, (uint32_t*)&DAC1_data, 1u, DAC_ALIGN_12B_L);
+  HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)&DAC2_data, 1u, DAC_ALIGN_12B_L);
+
+  HAL_TIM_OC_Start_IT(&htim8, TIM_CHANNEL_1);
+  HAL_TIM_OC_Start_IT(&htim8, TIM_CHANNEL_2);
+  HAL_TIM_OC_Start_IT(&htim8, TIM_CHANNEL_3);
+  HAL_TIM_OC_Start_IT(&htim8, TIM_CHANNEL_4);
+
+  HAL_TIM_Base_Start(&htim8);
+
+  while(1)
+  {    
+
   }
 }
 /* USER CODE END 0 */
@@ -148,7 +162,53 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if(TIM8 == htim->Instance)
+  {
+    if(GPIOC->IDR & (1 << 6u))
+    {
+      if(HAL_TIM_ACTIVE_CHANNEL_1 == htim->Channel)
+      {
+        laser_point_s *point = laser_irq_get_laser_point();
+        if(NULL != point)
+        {
+          DAC1_data = (uint16_t)((point->x / 16) + 2048);
+          DAC2_data = (uint16_t)((point->y / 16) + 2048);
+          laser_r_data = point->r;
+          laser_g_data = point->g;
+          laser_b_data = point->b;
+          HAL_GPIO_WritePin(TEST_PIN2_GPIO_Port, TEST_PIN2_Pin, 0);
+          HAL_GPIO_WritePin(TEST_PIN2_GPIO_Port, TEST_PIN2_Pin, point->on);
+        }
+      }
+    }
+    else
+    {
+      if(HAL_TIM_ACTIVE_CHANNEL_1 == htim->Channel)
+      {
+        HAL_GPIO_WritePin(TEST_PIN1_GPIO_Port, TEST_PIN1_Pin, 1u);
+        hspi1.Instance->DR = spi_data;
+      }
+      if(HAL_TIM_ACTIVE_CHANNEL_2 == htim->Channel)
+      {
+        HAL_GPIO_WritePin(TEST_PIN1_GPIO_Port, TEST_PIN1_Pin, 0u);
+        HAL_GPIO_WritePin(TEST_PIN1_GPIO_Port, TEST_PIN1_Pin, 1u);
+        hspi1.Instance->DR = spi_data;
+      }
+      else if(HAL_TIM_ACTIVE_CHANNEL_3 == htim->Channel)
+      {
+        HAL_GPIO_WritePin(TEST_PIN1_GPIO_Port, TEST_PIN1_Pin, 0u);
+        HAL_GPIO_WritePin(TEST_PIN1_GPIO_Port, TEST_PIN1_Pin, 1u);
+        hspi1.Instance->DR = spi_data;
+      }
+      else if(HAL_TIM_ACTIVE_CHANNEL_4 == htim->Channel)
+      {
+        HAL_GPIO_WritePin(TEST_PIN1_GPIO_Port, TEST_PIN1_Pin, 0u);
+      }
+    }
+  }
+}
 /* USER CODE END 4 */
 
 /**
