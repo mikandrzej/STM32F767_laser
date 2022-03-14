@@ -2,7 +2,7 @@
 #define SAMPLING_FREQ 20000u
 #define FPS 20u
 
-#define POINT_TO_POINT_MAX_DIST 65530
+#define POINT_TO_POINT_MAX_DIST 500
 
 #define FRAMES_IN_QUEUE 8u
 
