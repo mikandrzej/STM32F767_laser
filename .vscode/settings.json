@@ -1,0 +1,10 @@
+{
+    "makefile.extensionOutputFolder": "./.vscode",
+    "cortex-debug.armToolchainPath": "C:\\PROGRAM FILES (X86)\\GNU ARM EMBEDDED TOOLCHAIN\\10 2021.10\\BIN",
+    "cortex-debug.openocdPath": "C:\\XPACK-OPENOCD-0.11.0-2\\BIN\\OPENOCD.EXE",
+    "files.associations": {
+        "stm32f7xx_hal_def.h": "c",
+        "stm32f7xx.h": "c",
+        "stm32f767xx.h": "c"
+    }
+}
