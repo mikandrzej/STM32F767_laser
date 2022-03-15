@@ -81,6 +81,7 @@ int main(void)
   MX_SPI1_Init();
   __HAL_SPI_ENABLE(&hspi1);
 
+/* TEMP BEGIN */
   err_t status;
   
   status = laser_font_print_text("DUPA", -20000, -20000, 2, 255,255,255);
@@ -88,6 +89,7 @@ int main(void)
   {
     (void)laser_frame_processor_enqueue();
   }
+/* TEMP END */
 
   HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_2, (uint32_t*)&DAC1_data, 1u, DAC_ALIGN_12B_L);
   HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)&DAC2_data, 1u, DAC_ALIGN_12B_L);
@@ -180,6 +182,10 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
           laser_b_data = point->b;
           HAL_GPIO_WritePin(TEST_PIN2_GPIO_Port, TEST_PIN2_Pin, 0);
           HAL_GPIO_WritePin(TEST_PIN2_GPIO_Port, TEST_PIN2_Pin, point->on);
+        }
+        else
+        {
+          HAL_GPIO_WritePin(TEST_PIN2_GPIO_Port, TEST_PIN2_Pin, 0u);
         }
       }
     }
